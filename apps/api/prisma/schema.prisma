@@ -1,0 +1,824 @@
+// Saath — Prisma schema. Money is stored as BIGINT paise everywhere.
+// The double-booking EXCLUDE constraint is added via raw SQL migration
+// (see migrations/000001_init + 000002_booking_exclusion).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------- enums -----------------------------
+
+enum UserRole {
+  CUSTOMER
+  COMPANION
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+}
+
+enum VerificationStatus {
+  NOT_STARTED
+  SUBMITTED
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum BookingStatus {
+  REQUESTED
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum MeetingType {
+  IN_PERSON
+  ONLINE
+}
+
+enum PricingModel {
+  HOURLY
+  SESSION
+}
+
+enum AvailabilityKind {
+  WEEKLY_RECURRING
+  AVAILABLE
+  BLOCKED
+  BREAK
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  CAPTURED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  PROCESSED
+  REJECTED
+}
+
+enum WalletTxnType {
+  BOOKING_CREDIT
+  REFUND_DEBIT
+  PAYOUT_DEBIT
+  ADJUSTMENT
+  PROMO_CREDIT
+  RELEASE
+}
+
+enum WalletTxnState {
+  PENDING
+  AVAILABLE
+}
+
+enum PayoutStatus {
+  REQUESTED
+  UNDER_REVIEW
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  ON_HOLD
+}
+
+enum ReportReason {
+  HARASSMENT
+  FAKE_PROFILE
+  SCAM
+  THREAT
+  INAPPROPRIATE_CONTENT
+  PROHIBITED_SERVICE
+  PAYMENT_FRAUD
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  TRIAGED
+  INVESTIGATING
+  ACTIONED
+  DISMISSED
+}
+
+enum ModerationStatus {
+  PENDING
+  FLAGGED
+  HELD
+  CLEARED
+  REMOVED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CheckinStatus {
+  NOT_STARTED
+  CHECKED_IN
+  CHECKED_OUT
+  MISSED_ESCALATED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+}
+
+enum DisputeResolution {
+  REFUND_FULL
+  REFUND_PARTIAL
+  RELEASE
+  CANCEL
+}
+
+enum NotificationType {
+  BOOKING_REQUESTED
+  BOOKING_ACCEPTED
+  BOOKING_REJECTED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  BOOKING_REMINDER
+  NEW_MESSAGE
+  REVIEW_RECEIVED
+  VERIFICATION_UPDATE
+  REFUND_PROCESSED
+  SAFETY_ALERT
+  PAYOUT_UPDATE
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum RiskEventType {
+  SIGNUP_VELOCITY
+  PAYMENT_FAILURE
+  CANCELLATION_SPIKE
+  CHARGEBACK
+  MESSAGE_FLAG
+  REPORT
+  DEVICE_SHARED
+  OFF_PLATFORM_PAYMENT_ATTEMPT
+  THREAT_KEYWORD
+}
+
+// ----------------------------- users / auth -----------------------------
+
+model User {
+  id              String         @id @default(uuid()) @db.Uuid
+  email           String         @unique
+  phone           String?        @unique
+  passwordHash    String?
+  role            UserRole       @default(CUSTOMER)
+  status          UserStatus     @default(ACTIVE)
+  dateOfBirth     DateTime?
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+  lastActiveAt    DateTime?      @default(now())
+  locale          String         @default("en-IN")
+  isAdmin2faEnabled Boolean      @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  customerProfile     CustomerProfile?
+  companionProfile    CompanionProfile?
+  sessions            Session[]
+  oauthAccounts       OAuthAccount[]
+  verificationRequests VerificationRequest[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]        @relation("ActorLogs")
+  riskEvents          RiskEvent[]
+  riskScore           RiskScore?
+  wallet              Wallet?
+  payouts             Payout[]
+  favorites           Favorite[]
+  blocksInitiated     Block[]           @relation("Blocker")
+  blocksReceived      Block[]           @relation("Blocked")
+  reportsFiled        Report[]          @relation("Reporter")
+  reportsReceived     Report[]          @relation("Reported")
+  trustedContacts     TrustedContact[]
+  sosEvents           SosEvent[]
+  conversationLinks   ConversationParticipant[]
+  messagesSent        Message[]         @relation("Sender")
+  bookingsAsCustomer  Booking[]         @relation("CustomerBookings")
+  disputesOpened      Dispute[]         @relation("DisputesOpened")
+
+  @@index([status, role])
+  @@index([lastActiveAt])
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshHash  String   @unique
+  familyId     String   @db.Uuid
+  userAgent    String?
+  ip           String?
+  rotatedAt    DateTime?
+  revokedAt    DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("sessions")
+}
+
+model OAuthAccount {
+  id          String @id @default(uuid()) @db.Uuid
+  userId      String @db.Uuid
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    String
+  providerSub String
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, providerSub])
+  @@map("oauth_accounts")
+}
+
+model CustomerProfile {
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String            @unique @db.Uuid
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  avatarKey   String?
+  city        String?
+  bio         String?
+  interests   String[]
+  visibility  ProfileVisibility @default(PUBLIC)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("customer_profiles")
+}
+
+// ----------------------------- companions -----------------------------
+
+model ExperienceCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  name        String
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  services  CompanionService[]
+  bookings  Booking[]
+
+  @@map("experience_categories")
+}
+
+model CompanionProfile {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @unique @db.Uuid
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName        String
+  tagline            String?
+  bio                String
+  avatarKey          String?
+  galleryKeys        String[]
+  city               String
+  area               String?
+  languages          String[]
+  interests          String[]
+  personalityTags    String[]
+  meetingTypes       MeetingType[]
+  responseRate       Float              @default(1.0)
+  cancellationRate   Float              @default(0)
+  completedCount     Int                @default(0)
+  ratingAvg          Float              @default(0)
+  ratingCount        Int                @default(0)
+  ratingCommunication Float             @default(0)
+  ratingPunctuality  Float              @default(0)
+  ratingRespect      Float              @default(0)
+  ratingExperience   Float              @default(0)
+  verificationStatus VerificationStatus @default(NOT_STARTED)
+  profileModeration  ModerationStatus   @default(PENDING)
+  isLive             Boolean            @default(false)
+  timezone           String             @default("Asia/Kolkata")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deactivatedAt      DateTime?
+
+  services      CompanionService[]
+  slots         AvailabilitySlot[]
+  overrides     AvailabilityOverride[]
+  bookings      Booking[]
+  reviews       Review[]
+  favorites     Favorite[]
+  checkins      SafetyCheckin[]
+
+  @@index([city, isLive])
+  @@index([verificationStatus])
+  @@index([ratingAvg])
+  @@map("companion_profiles")
+}
+
+model CompanionService {
+  id                 String       @id @default(uuid()) @db.Uuid
+  companionProfileId String       @db.Uuid
+  companion          CompanionProfile @relation(fields: [companionProfileId], references: [id], onDelete: Cascade)
+  experienceId       String       @db.Uuid
+  experience         ExperienceCategory @relation(fields: [experienceId], references: [id])
+  pricingModel       PricingModel @default(HOURLY)
+  ratePaise          BigInt
+  minDurationMinutes Int          @default(60)
+  isActive           Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@unique([companionProfileId, experienceId])
+  @@map("companion_services")
+}
+
+model AvailabilitySlot {
+  id                 String   @id @default(uuid()) @db.Uuid
+  companionProfileId String   @db.Uuid
+  companion          CompanionProfile @relation(fields: [companionProfileId], references: [id], onDelete: Cascade)
+  dayOfWeek          Int      // 0=Mon .. 6=Sun
+  startTime          String   // "HH:MM" in companion timezone
+  endTime            String
+  createdAt          DateTime @default(now())
+
+  @@unique([companionProfileId, dayOfWeek, startTime])
+  @@index([companionProfileId, dayOfWeek])
+  @@map("availability_slots")
+}
+
+model AvailabilityOverride {
+  id                 String           @id @default(uuid()) @db.Uuid
+  companionProfileId String           @db.Uuid
+  companion          CompanionProfile @relation(fields: [companionProfileId], references: [id], onDelete: Cascade)
+  date               String           // YYYY-MM-DD (companion tz)
+  kind               AvailabilityKind
+  startTime          String?
+  endTime            String?
+  reason             String?
+  createdAt          DateTime         @default(now())
+
+  @@index([companionProfileId, date])
+  @@map("availability_overrides")
+}
+
+// ----------------------------- bookings -----------------------------
+
+model Booking {
+  id                  String        @id @default(uuid()) @db.Uuid
+  customerId          String        @db.Uuid
+  companionProfileId  String        @db.Uuid
+  experienceId        String        @db.Uuid
+  startAt             DateTime
+  endAt               DateTime
+  durationMinutes     Int
+  meetingType         MeetingType
+  meetingArea         String?
+  note                String?
+  status              BookingStatus @default(REQUESTED)
+  basePaise           BigInt
+  commissionPaise     BigInt
+  taxPaise            BigInt
+  totalPaise          BigInt
+  companionCreditPaise BigInt
+  idempotencyKey      String        @unique
+  cancellationReason  String?
+  cancelledById       String?       @db.Uuid
+  paymentExpiresAt    DateTime?
+  acceptedAt          DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  customer        User               @relation("CustomerBookings", fields: [customerId], references: [id])
+  companion       CompanionProfile   @relation(fields: [companionProfileId], references: [id])
+  experience      ExperienceCategory @relation(fields: [experienceId], references: [id])
+  payments        Payment[]
+  refunds         Refund[]
+  dispute         Dispute?
+  reviews         Review[]
+  conversation    Conversation?
+  checkin         SafetyCheckin?
+
+  @@index([customerId, status])
+  @@index([companionProfileId, status])
+  @@index([startAt])
+  @@map("bookings")
+}
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  bookingId         String        @db.Uuid
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider          String        @default("razorpay")
+  providerOrderId   String?       @unique
+  providerPaymentId String?       @unique
+  amountPaise       BigInt
+  currency          String        @default("INR")
+  status            PaymentStatus @default(CREATED)
+  method            String?
+  idempotencyKey    String        @unique
+  capturedAt        DateTime?
+  webhookEvents     Json          @default("[]")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  refunds Refund[]
+
+  @@index([bookingId])
+  @@map("payments")
+}
+
+model Refund {
+  id                String       @id @default(uuid()) @db.Uuid
+  paymentId         String       @db.Uuid
+  payment           Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  bookingId         String       @db.Uuid
+  booking           Booking      @relation(fields: [bookingId], references: [id])
+  amountPaise       BigInt
+  reason            String
+  status            RefundStatus @default(REQUESTED)
+  providerRefundId  String?
+  initiatedById     String       @db.Uuid
+  createdAt         DateTime     @default(now())
+  processedAt       DateTime?
+
+  @@map("refunds")
+}
+
+model Dispute {
+  id            String            @id @default(uuid()) @db.Uuid
+  bookingId     String            @unique @db.Uuid
+  booking       Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  openedById    String            @db.Uuid
+  opener        User              @relation("DisputesOpened", fields: [openedById], references: [id])
+  reason        String
+  evidenceRefs  String[]
+  status        DisputeStatus     @default(OPEN)
+  resolution    DisputeResolution?
+  decidedById   String?
+  decidedAt     DateTime?
+  createdAt     DateTime          @default(now())
+
+  @@map("disputes")
+}
+
+// ----------------------------- wallet -----------------------------
+
+model Wallet {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @db.Uuid
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pendingPaise    BigInt   @default(0)
+  availablePaise  BigInt   @default(0)
+  withdrawnPaise  BigInt   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transactions WalletTransaction[]
+  payouts      Payout[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id               String           @id @default(uuid()) @db.Uuid
+  walletId         String           @db.Uuid
+  wallet           Wallet           @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type             WalletTxnType
+  state            WalletTxnState   @default(AVAILABLE)
+  amountPaise      BigInt // signed: credit +, debit -
+  pendingBalanceAfter  BigInt
+  availableBalanceAfter BigInt
+  refType          String? // BOOKING | PAYOUT | REFUND | ADJUSTMENT
+  refId            String?
+  createdById      String?
+  createdAt        DateTime         @default(now())
+
+  @@index([walletId, createdAt])
+  @@map("wallet_transactions")
+}
+
+model Payout {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  user            User         @relation(fields: [userId], references: [id])
+  walletId        String       @db.Uuid
+  wallet          Wallet       @relation(fields: [walletId], references: [id])
+  amountPaise     BigInt
+  fundAccountId   String
+  status          PayoutStatus @default(REQUESTED)
+  riskHoldReason  String?
+  providerRef     String?
+  reviewedById    String?
+  processedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userId, status])
+  @@map("payouts")
+}
+
+// ----------------------------- chat -----------------------------
+
+model Conversation {
+  id           String   @id @default(uuid()) @db.Uuid
+  bookingId    String?  @unique @db.Uuid
+  booking      Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  contextType  String   @default("INQUIRY") // INQUIRY | BOOKING
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([updatedAt])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id               String        @id @default(uuid()) @db.Uuid
+  conversationId   String        @db.Uuid
+  conversation     Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId           String        @db.Uuid
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadMessageId String?      @db.Uuid
+  joinedAt         DateTime      @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id               String           @id @default(uuid()) @db.Uuid
+  conversationId   String           @db.Uuid
+  conversation     Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId         String           @db.Uuid
+  sender           User             @relation("Sender", fields: [senderId], references: [id])
+  body             String
+  moderationStatus ModerationStatus @default(CLEARED)
+  riskLevel        RiskLevel        @default(LOW)
+  moderationSignals String[]
+  readAt           DateTime?
+  deletedAt        DateTime?
+  createdAt        DateTime         @default(now())
+
+  flags MessageFlag[]
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model MessageFlag {
+  id          String   @id @default(uuid()) @db.Uuid
+  messageId   String   @db.Uuid
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  flaggedBy   String   // "system" or userId
+  signals     String[]
+  riskLevel   RiskLevel
+  resolution  String?  // DISMISSED | REMOVED | WARNING_SENT
+  reviewedById String? @db.Uuid
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+
+  @@map("message_flags")
+}
+
+// ----------------------------- reviews / social -----------------------------
+
+model Review {
+  id             String   @id @default(uuid()) @db.Uuid
+  bookingId      String   @unique @db.Uuid
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customerId     String   @db.Uuid
+  companionProfileId String @db.Uuid
+  companion      CompanionProfile @relation(fields: [companionProfileId], references: [id], onDelete: Cascade)
+  communication  Int
+  punctuality    Int
+  respect        Int
+  experience     Int
+  overall        Int
+  comment        String?
+  status         ModerationStatus @default(CLEARED)
+  createdAt      DateTime @default(now())
+
+  @@index([companionProfileId, createdAt])
+  @@map("reviews")
+}
+
+model Favorite {
+  id                 String   @id @default(uuid()) @db.Uuid
+  customerId         String   @db.Uuid
+  companionProfileId String   @db.Uuid
+  createdAt          DateTime @default(now())
+
+  customer   User             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  companion  CompanionProfile @relation(fields: [companionProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, companionProfileId])
+  @@map("favorites")
+}
+
+model Block {
+  id          String   @id @default(uuid()) @db.Uuid
+  blockerId   String   @db.Uuid
+  blockedId   String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@map("blocks")
+}
+
+model Report {
+  id              String       @id @default(uuid()) @db.Uuid
+  reporterId      String       @db.Uuid
+  reporter        User         @relation("Reporter", fields: [reporterId], references: [id])
+  reportedUserId  String?      @db.Uuid
+  reportedUser    User?        @relation("Reported", fields: [reportedUserId], references: [id])
+  refType         String       // USER | MESSAGE | REVIEW | BOOKING
+  refId           String       @db.Uuid
+  reason          ReportReason
+  details         String
+  status          ReportStatus @default(OPEN)
+  riskLevel       RiskLevel    @default(LOW)
+  assignedToId    String?
+  actionTaken     String?
+  resolution      String?
+  createdAt       DateTime     @default(now())
+  resolvedAt      DateTime?
+
+  @@index([status, riskLevel])
+  @@map("reports")
+}
+
+// ----------------------------- safety -----------------------------
+
+model SafetyCheckin {
+  id                   String        @id @default(uuid()) @db.Uuid
+  bookingId            String        @unique @db.Uuid
+  booking              Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  companionProfileId   String        @db.Uuid
+  companion            CompanionProfile @relation(fields: [companionProfileId], references: [id])
+  status               CheckinStatus @default(NOT_STARTED)
+  locationShareEnabled Boolean       @default(false)
+  checkedInAt          DateTime?
+  checkedOutAt         DateTime?
+  remindersSentAt      DateTime[]
+  locationPoints       Json          @default("[]") // ephemeral; TTL-purged
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@map("safety_checkins")
+}
+
+model TrustedContact {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String
+  relationship String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("trusted_contacts")
+}
+
+model SosEvent {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingId     String?   @db.Uuid
+  location      Json?
+  resolvedAt    DateTime?
+  resolvedById  String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("sos_events")
+}
+
+// ----------------------------- verification -----------------------------
+
+model VerificationRequest {
+  id               String             @id @default(uuid()) @db.Uuid
+  userId           String             @db.Uuid
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider         String             @default("mock")
+  providerRef      String?
+  idvType          String             @default("ID_FACE")
+  assertedAgeGte18 Boolean            @default(false)
+  faceMatch        Boolean            @default(false)
+  status           VerificationStatus @default(SUBMITTED)
+  rejectionReason  String?
+  reviewedById     String?
+  expiresAt        DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([userId, status])
+  @@map("verification_requests")
+}
+
+// ----------------------------- notifications / admin / risk -----------------------------
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  channel   String           @default("IN_APP") // IN_APP | EMAIL | SMS | PUSH
+  payload   Json
+  readAt    DateTime?
+  sentAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorId     String?  @db.Uuid
+  actor       User?    @relation("ActorLogs", fields: [actorId], references: [id])
+  action      String
+  targetType  String
+  targetId    String   @db.Uuid
+  before      Json?
+  after       Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model PlatformSetting {
+  id    String @id @default(uuid()) @db.Uuid
+  key   String @unique
+  value Json
+  updatedById String? @db.Uuid
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+model RiskEvent {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @db.Uuid
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      RiskEventType
+  signals   Json
+  riskDelta Int
+  createdAt DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@map("risk_events")
+}
+
+model RiskScore {
+  userId    String    @id @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score     Int       @default(0)
+  level     RiskLevel @default(LOW)
+  reasons   Json      @default("[]")
+  updatedAt DateTime  @updatedAt
+
+  @@map("risk_scores")
+}

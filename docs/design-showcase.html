@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saath — Design System Showcase</title>
+<style>
+  :root{
+    --teal-50:#EFF8F6; --teal-100:#D7EEEA; --teal-300:#7FC4BC; --teal-500:#27877D;
+    --teal-600:#176B63; --teal-700:#11554F; --teal-800:#0E443F; --teal-900:#0B3733; --teal-950:#062623;
+    --marigold-300:#F8D07A; --marigold-500:#ED9F1C; --marigold-600:#D08412;
+    --sand-50:#FBFAF7; --sand-100:#F5F1EA; --sand-200:#EAE4DA; --sand-400:#A8A094; --sand-600:#6B7370;
+    --ink-900:#1E2A28; --white:#fff;
+    --success:#1E9E6A; --danger:#DC3B3B; --danger-dark:#B02A2A; --warning:#C9810C; --info:#2B7FD9; --rose:#E0564F;
+    --font-display: Georgia, 'Times New Roman', 'Songti SC', serif;
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --shadow-card:0 1px 2px rgba(14,68,63,.06), 0 8px 24px -12px rgba(14,68,63,.18);
+    --shadow-pop:0 12px 40px -12px rgba(6,38,35,.35);
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font-sans);background:var(--sand-50);color:var(--ink-900);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  section{padding:72px 0;border-bottom:1px solid var(--sand-200)}
+  .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--teal-600)}
+  h2.sec{font-family:var(--font-display);font-size:30px;line-height:1.2;font-weight:600;margin:8px 0 8px;color:var(--teal-900)}
+  .sec-sub{color:var(--sand-600);font-size:15px;max-width:640px;margin-bottom:36px}
+
+  /* ---------- mini nav ---------- */
+  .topnav{position:sticky;top:0;z-index:50;background:rgba(251,250,247,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--sand-200)}
+  .topnav .wrap{display:flex;align-items:center;gap:20px;height:56px;overflow-x:auto}
+  .brand{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:700;font-size:19px;color:var(--teal-800);text-decoration:none;white-space:nowrap}
+  .topnav a.navlink{font-size:13px;color:var(--sand-600);text-decoration:none;white-space:nowrap;font-weight:600}
+  .topnav a.navlink:hover{color:var(--teal-700)}
+
+  /* ---------- hero ---------- */
+  .hero{background:linear-gradient(135deg,#11554F 0%,#176B63 55%,#1E7A70 100%);color:#fff;padding:88px 0 96px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.06)}
+  .hero::before{content:"";position:absolute;left:-80px;bottom:-160px;width:360px;height:360px;border-radius:50%;background:rgba(237,159,28,.12)}
+  .hero .wrap{position:relative;z-index:1;max-width:860px}
+  .hero h1{font-family:var(--font-display);font-size:52px;line-height:1.08;font-weight:600;letter-spacing:-.01em;margin:18px 0 16px}
+  .hero p{font-size:18px;color:rgba(255,255,255,.88);max-width:560px;margin-bottom:32px}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600}
+  .trust{display:flex;flex-wrap:wrap;gap:22px;margin-top:40px}
+  .trust span{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.92)}
+  svg.ic{width:18px;height:18px;flex:none}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;font-family:var(--font-sans);font-weight:700;font-size:15px;padding:0 22px;height:44px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:transform .15s var(--ease),background .15s,box-shadow .15s;white-space:nowrap}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--teal-700);color:#fff} .btn-primary:hover{background:var(--teal-800)}
+  .btn-lg{height:48px;font-size:16px;padding:0 28px;border-radius:10px}
+  .btn-secondary{background:#fff;color:var(--teal-700);border-color:var(--teal-700)}
+  .btn-secondary:hover{background:var(--teal-50)}
+  .btn-ghost{background:transparent;color:var(--teal-700)} .btn-ghost:hover{background:var(--teal-50)}
+  .btn-on-dark{background:#fff;color:var(--teal-800)}
+  .btn-outline-light{background:transparent;color:#fff;border-color:rgba(255,255,255,.55)}
+  .btn-outline-light:hover{background:rgba(255,255,255,.12)}
+  .btn-danger-soft{background:#fff;color:var(--danger);border-color:#F2C3C3}
+  .btn-sm{height:36px;font-size:13.5px;padding:0 14px;border-radius:8px}
+  .btn[disabled]{opacity:.55;cursor:not-allowed}
+
+  /* ---------- swatches ---------- */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .sw{border-radius:12px;overflow:hidden;border:1px solid var(--sand-200);background:#fff;box-shadow:var(--shadow-card)}
+  .sw .chip{height:72px}
+  .sw .meta{padding:10px 12px}
+  .sw .nm{font-size:13px;font-weight:700}
+  .sw .hx{font-size:12px;color:var(--sand-600);font-variant-numeric:tabular-nums}
+
+  /* ---------- type ---------- */
+  .type-row{display:flex;align-items:baseline;gap:24px;padding:18px 0;border-bottom:1px dashed var(--sand-200)}
+  .type-row .lbl{width:130px;flex:none;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--sand-600);font-weight:700}
+  .display-xl{font-family:var(--font-display);font-size:52px;line-height:1.08;font-weight:600;color:var(--teal-900)}
+  .h1{font-family:var(--font-display);font-size:32px;font-weight:600;color:var(--teal-900)}
+  .h2{font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--teal-900)}
+  .h3{font-size:19px;font-weight:700}
+  .body-lg{font-size:17px;color:var(--ink-900)}
+  .body{font-size:15px;color:var(--ink-900)}
+  .sm{font-size:13px;color:var(--sand-600)}
+  .price{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* ---------- badges ---------- */
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:700}
+  .badge-verified{background:var(--teal-700);color:#fff}
+  .badge-online{background:var(--teal-50);color:var(--success)}
+  .badge-online .dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+  .badge-chip{background:var(--sand-100);color:var(--ink-900);font-weight:600}
+  .badge-status{border-radius:12px}
+  .st-success{background:rgba(30,158,106,.12);color:#137950}
+  .st-warning{background:rgba(201,129,12,.13);color:#9A6508}
+  .st-danger{background:rgba(220,59,59,.12);color:#B02A2A}
+  .st-info{background:rgba(43,127,217,.12);color:#1F66B3}
+  .rating{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:14px}
+  .rating .count{color:var(--sand-600);font-weight:600}
+
+  /* ---------- companion card ---------- */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px}
+  .ccard{background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card);transition:transform .2s var(--ease),box-shadow .2s var(--ease);border:1px solid rgba(14,68,63,.05)}
+  .ccard:hover{transform:translateY(-3px);box-shadow:var(--shadow-pop)}
+  .ccard .photo{position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:52px;font-weight:600;color:#fff}
+  .ccard .photo .fav{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.92);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-card);transition:transform .2s var(--ease)}
+  .ccard .photo .fav:active{transform:scale(1.25)}
+  .ccard .photo .fav svg{width:19px;height:19px}
+  .ccard .body{padding:16px 16px 18px}
+  .ccard .name{display:flex;align-items:center;gap:7px;font-size:16.5px;font-weight:700}
+  .ccard .meta{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:13px;color:var(--sand-600);flex-wrap:wrap}
+  .ccard .bio{font-size:13.5px;color:var(--sand-600);margin:10px 0 12px;min-height:40px}
+  .ccard .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .ccard .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--sand-200);padding-top:13px}
+  .ccard .from{font-size:12px;color:var(--sand-600)}
+  .ccard .rate{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--teal-800)}
+  .ph1{background:linear-gradient(135deg,#27877D,#0E443F)}
+  .ph2{background:linear-gradient(135deg,#D08412,#8A5510)}
+  .ph3{background:linear-gradient(135deg,#2B7FD9,#173F6E)}
+  .compatibility{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.94);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800;color:var(--teal-700);display:flex;align-items:center;gap:5px}
+
+  /* ---------- booking widget ---------- */
+  .panel{background:#fff;border:1px solid var(--sand-200);border-radius:16px;box-shadow:var(--shadow-card);padding:24px}
+  .two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start}
+  @media(max-width:860px){.two-col{grid-template-columns:1fr}}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  .input{width:100%;height:44px;border:1px solid var(--sand-200);border-radius:8px;padding:0 14px;font-size:15px;font-family:var(--font-sans);background:#fff;color:var(--ink-900)}
+  .input:focus{outline:none;border-color:var(--teal-600);box-shadow:0 0 0 3px rgba(39,135,125,.18)}
+  .seg{display:flex;background:var(--sand-100);border-radius:10px;padding:4px;gap:4px}
+  .seg button{flex:1;height:38px;border:none;background:transparent;border-radius:7px;font-weight:700;font-size:14px;cursor:pointer;color:var(--sand-600)}
+  .seg button.on{background:#fff;color:var(--teal-800);box-shadow:var(--shadow-card)}
+  .slot-chips{display:flex;gap:8px;flex-wrap:wrap}
+  .slot{border:1px solid var(--sand-200);background:#fff;border-radius:999px;padding:8px 15px;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--ink-900)}
+  .slot.on{background:var(--teal-700);border-color:var(--teal-700);color:#fff}
+  .slot[disabled]{opacity:.4;text-decoration:line-through;cursor:not-allowed}
+  .price-lines{margin:18px 0;border-top:1px solid var(--sand-200);padding-top:14px}
+  .pl{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;color:var(--sand-600)}
+  .pl.total{border-top:1px dashed var(--sand-200);margin-top:8px;padding-top:12px;color:var(--ink-900);font-weight:800;font-size:16px}
+  .pl.total span:last-child{font-variant-numeric:tabular-nums;color:var(--teal-800)}
+
+  /* ---------- chat ---------- */
+  .chat-demo{display:grid;grid-template-columns:220px 1fr;border:1px solid var(--sand-200);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card);background:#fff;min-height:340px}
+  @media(max-width:640px){.chat-demo{grid-template-columns:1fr}}
+  .conv-list{background:var(--sand-50);border-right:1px solid var(--sand-200);padding:10px}
+  .conv{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;cursor:pointer}
+  .conv.on{background:#fff;box-shadow:var(--shadow-card)}
+  .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex:none}
+  .conv .nm{font-size:13.5px;font-weight:700}
+  .conv .prev{font-size:12px;color:var(--sand-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+  .unread{margin-left:auto;background:var(--teal-700);color:#fff;font-size:11px;font-weight:800;border-radius:999px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+  .chat-main{display:flex;flex-direction:column;background:var(--sand-50)}
+  .chat-head{padding:12px 16px;border-bottom:1px solid var(--sand-200);background:#fff;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}
+  .booking-tag{margin-left:auto;font-size:11.5px;background:var(--teal-100);color:var(--teal-800);font-weight:700;padding:4px 10px;border-radius:999px}
+  .bubble-wrap{padding:18px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .bubble{max-width:78%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.45}
+  .bubble.them{background:#fff;border:1px solid var(--sand-200);border-bottom-left-radius:4px;align-self:flex-start}
+  .bubble.me{background:var(--teal-700);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+  .sys-nudge{align-self:center;background:var(--sand-100);border:1px solid var(--sand-200);font-size:12px;color:var(--sand-600);padding:7px 14px;border-radius:999px;text-align:center;max-width:90%}
+  .typing{display:inline-flex;gap:3px;padding:4px 0}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--sand-400);animation:blink 1.2s infinite}
+  .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+  .chat-input{padding:12px 16px;border-top:1px solid var(--sand-200);background:#fff;display:flex;gap:10px}
+  .chat-input .input{flex:1}
+
+  /* ---------- safety ---------- */
+  .sos-fab{position:fixed;right:22px;bottom:22px;width:60px;height:60px;border-radius:50%;background:var(--danger);color:#fff;border:3px solid #fff;box-shadow:0 10px 30px rgba(220,59,59,.45);font-weight:800;font-size:13px;cursor:pointer;z-index:60;letter-spacing:.05em}
+  .sos-fab:hover{background:var(--danger-dark)}
+  .checkin-banner{background:linear-gradient(120deg,var(--teal-50),#fff);border:1px solid var(--teal-100);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .checkin-banner .t{font-weight:800;font-size:15px;color:var(--teal-900)}
+  .checkin-banner .s{font-size:13px;color:var(--sand-600)}
+  .sos-sheet{position:fixed;inset:0;background:rgba(6,38,35,.55);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:70}
+  .sos-sheet.open{display:flex}
+  .sos-card{background:#fff;width:100%;max-width:460px;border-radius:24px 24px 0 0;padding:28px 24px 32px;box-shadow:var(--shadow-pop);animation:up .25s var(--ease)}
+  @media(min-width:640px){.sos-sheet{align-items:center}.sos-card{border-radius:24px}}
+  @keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:translateY(0);opacity:1}}
+  .sos-card h3{font-family:var(--font-display);font-size:23px;color:var(--danger-dark);margin-bottom:4px}
+  .sos-opt{display:flex;align-items:center;gap:13px;width:100%;border:1px solid var(--sand-200);border-radius:12px;padding:14px;margin-top:10px;background:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:15px;font-family:var(--font-sans)}
+  .sos-opt.big{background:var(--danger);color:#fff;border-color:var(--danger);justify-content:center;font-size:17px;padding:16px}
+  .sos-opt .ic-wrap{width:38px;height:38px;border-radius:10px;background:var(--teal-50);display:flex;align-items:center;justify-content:center;color:var(--teal-700)}
+  .sos-opt.big .ic-wrap{background:rgba(255,255,255,.2);color:#fff}
+
+  /* ---------- admin ---------- */
+  .admin-demo{background:#fff;border:1px solid var(--sand-200);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--sand-200)}
+  .kpi{background:#fff;padding:16px}
+  .kpi .k{font-size:12px;color:var(--sand-600);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .kpi .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:4px}
+  .kpi .d{font-size:12px;font-weight:700;margin-top:2px}
+  .up{color:var(--success)}.down{color:var(--danger)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;padding:11px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--sand-600);background:var(--sand-50);border-bottom:1px solid var(--sand-200)}
+  td{padding:12px 14px;border-bottom:1px solid var(--sand-100)}
+  .risk-high{color:var(--danger-dark);font-weight:800}.risk-med{color:var(--warning);font-weight:800}.risk-low{color:var(--success);font-weight:800}
+  .bars{display:flex;align-items:flex-end;gap:10px;height:110px;padding:16px;background:#fff}
+  .bars div{flex:1;background:linear-gradient(180deg,var(--teal-500),var(--teal-700));border-radius:6px 6px 0 0;opacity:.85}
+
+  /* ---------- states ---------- */
+  .states{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+  .state{background:#fff;border:1px solid var(--sand-200);border-radius:16px;padding:26px;text-align:center;box-shadow:var(--shadow-card)}
+  .state .glyph{width:56px;height:56px;border-radius:50%;background:var(--teal-50);color:var(--teal-700);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .state h4{font-size:16px;margin-bottom:4px}
+  .state p{font-size:13px;color:var(--sand-600);margin-bottom:14px}
+  .skel{background:#fff;border:1px solid var(--sand-200);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .skel .img{aspect-ratio:4/3;background:var(--sand-100)}
+  .skel .ln{height:12px;border-radius:6px;background:var(--sand-100);margin:12px 16px}
+  .shimmer{position:relative;overflow:hidden}
+  .shimmer::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:sh 1.6s infinite}
+  @keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+  .toast{display:inline-flex;align-items:center;gap:10px;background:var(--teal-900);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow-pop)}
+  .toast.err{background:#7A1F1F}
+  footer{padding:40px 0 80px;color:var(--sand-600);font-size:13px;text-align:center}
+  .note{background:var(--sand-100);border-left:3px solid var(--marigold-500);padding:12px 16px;border-radius:0 10px 10px 0;font-size:13.5px;color:var(--ink-900);margin:20px 0}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav class="topnav">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2.5l7.5 3v5.2c0 4.8-3.2 8.4-7.5 10.3-4.3-1.9-7.5-5.5-7.5-10.3V5.5l7.5-3z" fill="#11554F"/><path d="M8.6 12.2l2.3 2.3 4.6-4.8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Saath
+    </a>
+    <a class="navlink" href="#palette">Palette</a>
+    <a class="navlink" href="#type">Typography</a>
+    <a class="navlink" href="#components">Components</a>
+    <a class="navlink" href="#card">Companion card</a>
+    <a class="navlink" href="#booking">Booking</a>
+    <a class="navlink" href="#chat">Chat</a>
+    <a class="navlink" href="#safety">Safety</a>
+    <a class="navlink" href="#admin">Admin</a>
+    <a class="navlink" href="#states">States</a>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="hero-badge">🛡 Verified companions · 18+ only · Safety-first marketplace</span>
+    <h1>Find your perfect<br>companion.</h1>
+    <p>Discover verified companions for safe and memorable social experiences — coffee, movies, events, city walks and more.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <a class="btn btn-lg btn-on-dark" href="#card">Explore Companions</a>
+      <a class="btn btn-lg btn-outline-light" href="#booking">Become a Companion</a>
+    </div>
+    <div class="trust">
+      <span>✓ ID &amp; age verified</span>
+      <span>✓ Secure UPI &amp; card payments</span>
+      <span>✓ Moderated chat</span>
+      <span>✓ SOS &amp; 24/7 safety support</span>
+    </div>
+  </div>
+</header>
+
+<!-- ================= PALETTE ================= -->
+<section id="palette">
+  <div class="wrap">
+    <span class="eyebrow">01 — Color</span>
+    <h2 class="sec">A palette built for trust</h2>
+    <p class="sec-sub">Deep teal signals safety and calm; marigold is reserved for ratings and warmth; red appears only for emergencies. All text pairs meet WCAG AA contrast.</p>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#11554F"></div><div class="meta"><div class="nm">Teal 700 — Primary</div><div class="hx">#11554F</div></div></div>
+      <div class="sw"><div class="chip" style="background:#0E443F"></div><div class="meta"><div class="nm">Teal 800 — Headings</div><div class="hx">#0E443F</div></div></div>
+      <div class="sw"><div class="chip" style="background:#27877D"></div><div class="meta"><div class="nm">Teal 500 — Links</div><div class="hx">#27877D</div></div></div>
+      <div class="sw"><div class="chip" style="background:#D7EEEA"></div><div class="meta"><div class="nm">Teal 100 — Soft bg</div><div class="hx">#D7EEEA</div></div></div>
+      <div class="sw"><div class="chip" style="background:#ED9F1C"></div><div class="meta"><div class="nm">Marigold 500 — Ratings</div><div class="hx">#ED9F1C</div></div></div>
+      <div class="sw"><div class="chip" style="background:#DC3B3B"></div><div class="meta"><div class="nm">Danger — SOS only</div><div class="hx">#DC3B3B</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1E9E6A"></div><div class="meta"><div class="nm">Success / Online</div><div class="hx">#1E9E6A</div></div></div>
+      <div class="sw"><div class="chip" style="background:#E0564F"></div><div class="meta"><div class="nm">Rose — Favorites</div><div class="hx">#E0564F</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1E2A28"></div><div class="meta"><div class="nm">Ink 900 — Text</div><div class="hx">#1E2A28</div></div></div>
+      <div class="sw"><div class="chip" style="background:#6B7370"></div><div class="meta"><div class="nm">Sand 600 — Muted</div><div class="hx">#6B7370</div></div></div>
+      <div class="sw"><div class="chip" style="background:#EAE4DA"></div><div class="meta"><div class="nm">Sand 200 — Borders</div><div class="hx">#EAE4DA</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FBFAF7"></div><div class="meta"><div class="nm">Sand 50 — App bg</div><div class="hx">#FBFAF7</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TYPOGRAPHY ================= -->
+<section id="type">
+  <div class="wrap">
+    <span class="eyebrow">02 — Typography</span>
+    <h2 class="sec">Fraunces serif + Plus Jakarta Sans</h2>
+    <p class="sec-sub">Editorial serif for display warmth; humanist sans for UI legibility; tabular numerals for money. (This preview falls back to Georgia / system-ui where webfonts are unavailable.)</p>
+    <div>
+      <div class="type-row"><div class="lbl">Display XL</div><div class="display-xl">Find your perfect companion</div></div>
+      <div class="type-row"><div class="lbl">H1 / H2</div><div class="h1">Verified people, real moments</div></div>
+      <div class="type-row"><div class="lbl">H3</div><div class="h3">Top companions in Noida this week</div></div>
+      <div class="type-row"><div class="lbl">Body large</div><div class="body-lg">Book a verified companion for coffee, dinner, movies or exploring the city.</div></div>
+      <div class="type-row"><div class="lbl">Body</div><div class="body">Every profile is identity and age verified before going live.</div></div>
+      <div class="type-row"><div class="lbl">Small</div><div class="sm">Response rate 98% · Typically replies within 10 minutes</div></div>
+      <div class="type-row"><div class="lbl">Price</div><div class="price">₹1,175.00</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPONENTS ================= -->
+<section id="components">
+  <div class="wrap">
+    <span class="eyebrow">03 — Components</span>
+    <h2 class="sec">Buttons, badges &amp; status</h2>
+    <p class="sec-sub">44px touch targets, calm micro-interactions, color never used alone to carry meaning.</p>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px">
+      <button class="btn btn-primary btn-lg">Request a Booking</button>
+      <button class="btn btn-secondary">Become a Companion</button>
+      <button class="btn btn-ghost">Sign in</button>
+      <button class="btn btn-danger-soft">Cancel booking</button>
+      <button class="btn btn-primary" disabled>Loading…</button>
+      <button class="btn btn-sm btn-primary">Small action</button>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:28px">
+      <span class="badge badge-verified"><svg class="ic" viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M12 2.5l7.5 3v5.2c0 4.8-3.2 8.4-7.5 10.3-4.3-1.9-7.5-5.5-7.5-10.3V5.5l7.5-3z" fill="#fff"/><path d="M8.6 12.2l2.3 2.3 4.6-4.8" stroke="#11554F" stroke-width="2" stroke-linecap="round"/></svg> Verified</span>
+      <span class="badge badge-online"><span class="dot"></span> Online now</span>
+      <span class="rating"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ED9F1C"><path d="M12 2l3 6.6 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21.2l1.4-7L2 9.4l7-.8L12 2z"/></svg>4.9 <span class="count">(128)</span></span>
+      <span class="badge badge-chip">☕ Coffee</span>
+      <span class="badge badge-chip">🎬 Movies</span>
+      <span class="badge badge-chip">🎮 Gaming</span>
+      <span class="badge badge-status st-success">● Confirmed</span>
+      <span class="badge badge-status st-warning">● Pending review</span>
+      <span class="badge badge-status st-danger">● High risk</span>
+      <span class="badge badge-status st-info">● Payout processing</span>
+    </div>
+
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      <span class="toast">✓ Booking confirmed — see you Saturday!</span>
+      <span class="toast err">Payment failed — no money was deducted. Retry?</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPANION CARD ================= -->
+<section id="card">
+  <div class="wrap">
+    <span class="eyebrow">04 — Marketplace</span>
+    <h2 class="sec">Discovery cards</h2>
+    <p class="sec-sub">The core atom of the marketplace: verification, rating, availability, price and favorite — all above the fold. Tap the ♥ to try the micro-interaction.</p>
+    <div class="cards-grid">
+      <article class="ccard">
+        <div class="photo ph1">
+          <span class="compatibility">✨ 94% match</span>
+          <button class="fav" aria-label="Favorite" onclick="fav(this)"><svg viewBox="0 0 24 24" fill="none" stroke="#E0564F" stroke-width="2"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.4 5 5.8 5c2 0 3.4 1.1 4.2 2.3C10.8 6.1 12.2 5 14.2 5c3.4 0 5.1 3.6 3.5 6.8C19.5 16.1 12 21 12 21z"/></svg></button>
+          AS
+        </div>
+        <div class="body">
+          <div class="name">Aarav S. <span class="badge badge-verified" style="padding:2px 8px;font-size:11px">Verified</span></div>
+          <div class="meta"><span class="rating" style="font-size:13px"><svg width="13" height="13" viewBox="0 0 24 24" fill="#ED9F1C"><path d="M12 2l3 6.6 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21.2l1.4-7L2 9.4l7-.8L12 2z"/></svg>4.9</span> · Noida · <span class="badge badge-online" style="padding:1px 8px;font-size:11px"><span class="dot"></span>Online</span></div>
+          <p class="bio">Coffee, long walks and indie films. Fluent in Hindi &amp; English.</p>
+          <div class="chips"><span class="badge badge-chip">☕ Coffee</span><span class="badge badge-chip">🎬 Movies</span><span class="badge badge-chip">🚶 Walking</span></div>
+          <div class="foot"><div><div class="from">from</div><div class="rate">₹499/hr</div></div><button class="btn btn-primary btn-sm">Book →</button></div>
+        </div>
+      </article>
+
+      <article class="ccard">
+        <div class="photo ph2">
+          <button class="fav" aria-label="Favorite" onclick="fav(this)"><svg viewBox="0 0 24 24" fill="none" stroke="#E0564F" stroke-width="2"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.4 5 5.8 5c2 0 3.4 1.1 4.2 2.3C10.8 6.1 12.2 5 14.2 5c3.4 0 5.1 3.6 3.5 6.8C19.5 16.1 12 21 12 21z"/></svg></button>
+          MP
+        </div>
+        <div class="body">
+          <div class="name">Priya M. <span class="badge badge-verified" style="padding:2px 8px;font-size:11px">Verified</span></div>
+          <div class="meta"><span class="rating" style="font-size:13px"><svg width="13" height="13" viewBox="0 0 24 24" fill="#ED9F1C"><path d="M12 2l3 6.6 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21.2l1.4-7L2 9.4l7-.8L12 2z"/></svg>5.0</span> · Greater Noida</div>
+          <p class="bio">Foodie, event-goer and your best plus-one for weddings &amp; parties.</p>
+          <div class="chips"><span class="badge badge-chip">🍽 Dinner</span><span class="badge badge-chip">🎉 Events</span><span class="badge badge-chip">☕ Coffee</span></div>
+          <div class="foot"><div><div class="from">from</div><div class="rate">₹699/hr</div></div><button class="btn btn-primary btn-sm">Book →</button></div>
+        </div>
+      </article>
+
+      <article class="ccard">
+        <div class="photo ph3">
+          <button class="fav" aria-label="Favorite" onclick="fav(this)"><svg viewBox="0 0 24 24" fill="none" stroke="#E0564F" stroke-width="2"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.4 5 5.8 5c2 0 3.4 1.1 4.2 2.3C10.8 6.1 12.2 5 14.2 5c3.4 0 5.1 3.6 3.5 6.8C19.5 16.1 12 21 12 21z"/></svg></button>
+          RK
+        </div>
+        <div class="body">
+          <div class="name">Rohan K. <span class="badge badge-verified" style="padding:2px 8px;font-size:11px">Verified</span></div>
+          <div class="meta"><span class="rating" style="font-size:13px"><svg width="13" height="13" viewBox="0 0 24 24" fill="#ED9F1C"><path d="M12 2l3 6.6 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21.2l1.4-7L2 9.4l7-.8L12 2z"/></svg>4.8</span> · Noida</div>
+          <p class="bio">Gaming nights, study sessions and deep conversations — online or in person.</p>
+          <div class="chips"><span class="badge badge-chip">🎮 Gaming</span><span class="badge badge-chip">📚 Study</span><span class="badge badge-chip">💬 Chat</span></div>
+          <div class="foot"><div><div class="from">from</div><div class="rate">₹399/hr</div></div><button class="btn btn-primary btn-sm">Book →</button></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BOOKING ================= -->
+<section id="booking">
+  <div class="wrap">
+    <span class="eyebrow">05 — Booking flow</span>
+    <h2 class="sec">Profile + sticky booking rail</h2>
+    <p class="sec-sub">Only free slots returned by the backend are selectable. Fees and GST are itemised — nothing is hidden. On mobile this rail becomes a sticky bottom bar + sheet.</p>
+    <div class="two-col">
+      <div class="panel">
+        <h3 class="h3" style="margin-bottom:14px">Aarav Sharma</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <span class="badge badge-verified">🛡 ID &amp; age verified</span>
+          <span class="badge badge-chip">🗣 Hindi, English</span>
+          <span class="badge badge-chip">📍 Noida &amp; nearby</span>
+        </div>
+        <p class="body" style="color:var(--sand-600)">Easygoing conversationalist who knows the best cafés in town. Happy to join for coffee, movies or a relaxed city walk. Public places only — let's keep it safe and fun.</p>
+        <div class="note">🔒 <strong>Safety:</strong> payments stay on-platform, chat is moderated, and you can check in with a trusted contact during your meetup.</div>
+        <div class="field"><label>Reviews</label>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--sand-600)">
+            <span>Communication <strong style="color:var(--ink-900)">4.9</strong></span>
+            <span>Punctuality <strong style="color:var(--ink-900)">5.0</strong></span>
+            <span>Respect <strong style="color:var(--ink-900)">5.0</strong></span>
+            <span>Experience <strong style="color:var(--ink-900)">4.8</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 class="h3" style="margin-bottom:16px">Request a booking</h3>
+        <div class="field">
+          <label>Experience</label>
+          <select class="input"><option>☕ Coffee companion</option><option>🎬 Movie companion</option><option>🚶 City walk</option></select>
+        </div>
+        <div class="field">
+          <label>Meeting type</label>
+          <div class="seg"><button class="on">In person</button><button>Online</button></div>
+        </div>
+        <div class="field">
+          <label>Available slots — Sat, 12 Sep</label>
+          <div class="slot-chips">
+            <button class="slot">10:00</button><button class="slot on">14:00</button>
+            <button class="slot" disabled>16:00</button><button class="slot">18:00</button>
+          </div>
+        </div>
+        <div class="price-lines">
+          <div class="pl"><span>Base (2h × ₹499)</span><span style="font-variant-numeric:tabular-nums">₹998</span></div>
+          <div class="pl"><span>Platform fee (15%)</span><span style="font-variant-numeric:tabular-nums">₹150</span></div>
+          <div class="pl"><span>GST (18% on fee)</span><span style="font-variant-numeric:tabular-nums">₹27</span></div>
+          <div class="pl total"><span>Total</span><span>₹1,175</span></div>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width:100%">Request a Booking</button>
+        <p class="sm" style="text-align:center;margin-top:10px">Free cancellation up to 48h before</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHAT ================= -->
+<section id="chat">
+  <div class="wrap">
+    <span class="eyebrow">06 — Messaging</span>
+    <h2 class="sec">Booking-linked, moderated chat</h2>
+    <p class="sec-sub">Conversations attach to bookings. Read receipts, typing indicators, and system nudges keep payments on-platform and scam attempts visible.</p>
+    <div class="chat-demo">
+      <div class="conv-list">
+        <div class="conv on"><div class="avatar ph1">AS</div><div><div class="nm">Aarav S. <span class="badge badge-verified" style="padding:0 5px;font-size:10px">✓</span></div><div class="prev">See you at 2pm! ☕</div></div><span class="unread">2</span></div>
+        <div class="conv"><div class="avatar ph2">MP</div><div><div class="nm">Priya M.</div><div class="prev">Thanks for booking</div></div></div>
+        <div class="conv"><div class="avatar ph3">RK</div><div><div class="nm">Rohan K.</div><div class="prev">GG tonight 🎮</div></div></div>
+      </div>
+      <div class="chat-main">
+        <div class="chat-head">Aarav S. <span class="badge badge-verified" style="padding:1px 7px;font-size:10.5px">Verified</span><span class="booking-tag">Booking · Sat 2:00 PM · Coffee</span></div>
+        <div class="bubble-wrap">
+          <div class="bubble them">Hi! Looking forward to Saturday. The café in Sector 104 works well for me — it's public and easy to find.</div>
+          <div class="bubble me">Perfect. Could you send your number so we can coordinate?</div>
+          <div class="sys-nudge">🔒 Contact details unlock once a booking is confirmed. Keeping chat here protects your payment and lets our safety team help if needed.</div>
+          <div class="bubble them">No problem — the booking's already confirmed, we can coordinate right here. See you at 2pm! ☕</div>
+          <div class="bubble them" style="display:flex;align-items:center;gap:6px"><span class="typing"><i></i><i></i><i></i></span></div>
+        </div>
+        <div class="chat-input"><input class="input" placeholder="Type a message…" aria-label="Message"><button class="btn btn-primary" style="height:44px">Send</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SAFETY ================= -->
+<section id="safety">
+  <div class="wrap">
+    <span class="eyebrow">07 — Safety</span>
+    <h2 class="sec">Safety is the product</h2>
+    <p class="sec-sub">One-tap SOS from any booking screen, check-in / check-out with escalation, and ephemeral location sharing — never continuous tracking. Tap the red SOS button (bottom-right) to preview the emergency sheet.</p>
+    <div class="two-col">
+      <div class="checkin-banner">
+        <div style="font-size:28px">🛡️</div>
+        <div style="flex:1;min-width:200px">
+          <div class="t">You're meeting Aarav · Sat 2:00–4:00 PM</div>
+          <div class="s">Check in when you meet. If you don't check out, we'll remind you — and can alert your trusted contact.</div>
+        </div>
+        <button class="btn btn-primary btn-sm">Check in</button>
+      </div>
+      <div class="panel" style="padding:18px">
+        <div class="t" style="font-weight:800;margin-bottom:10px">Trusted contacts</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13.5px">
+          <div style="display:flex;justify-content:space-between"><span>👤 Meera (sister)</span><span class="sm">+91 ••• •• 2210</span></div>
+          <div style="display:flex;justify-content:space-between"><span>👤 Dev (friend)</span><span class="sm">+91 ••• •• 8843</span></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:4px">+ Add trusted contact</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOS FAB + SHEET -->
+<button class="sos-fab" onclick="document.getElementById('sosSheet').classList.add('open')">SOS</button>
+<div class="sos-sheet" id="sosSheet" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sos-card" role="dialog" aria-label="Emergency options">
+    <h3>Need help now?</h3>
+    <p class="sm" style="margin-bottom:6px">Your safety team is available 24/7. This screen is reachable from every booking.</p>
+    <button class="sos-opt big"><span class="ic-wrap">📞</span> Call 112 — Emergency</button>
+    <button class="sos-opt"><span class="ic-wrap">🛟</span> Alert Saath safety team</button>
+    <button class="sos-opt"><span class="ic-wrap">📍</span> Notify trusted contact + share live location</button>
+    <button class="sos-opt" onclick="document.getElementById('sosSheet').classList.remove('open')" style="justify-content:center;color:var(--sand-600)">I'm okay — close</button>
+  </div>
+</div>
+
+<!-- ================= ADMIN ================= -->
+<section id="admin">
+  <div class="wrap">
+    <span class="eyebrow">08 — Admin &amp; moderation</span>
+    <h2 class="sec">Operations console</h2>
+    <p class="sec-sub">KPIs, growth charts and risk-coded queues. Every action (warn, suspend, ban, refund, payout) requires a reason and lands in the audit log.</p>
+    <div class="admin-demo">
+      <div class="kpis">
+        <div class="kpi"><div class="k">Users</div><div class="v">12,480</div><div class="d up">▲ 8.2% this month</div></div>
+        <div class="kpi"><div class="k">Verified companions</div><div class="v">342</div><div class="d up">▲ 14</div></div>
+        <div class="kpi"><div class="k">Bookings</div><div class="v">3,917</div><div class="d up">▲ 12%</div></div>
+        <div class="kpi"><div class="k">Commission</div><div class="v">₹6.8L</div><div class="d up">▲ 9%</div></div>
+        <div class="kpi"><div class="k">Refunds</div><div class="v">23</div><div class="d down">▲ 3</div></div>
+        <div class="kpi"><div class="k">Open reports</div><div class="v">7</div><div class="d down">▼ 2</div></div>
+      </div>
+      <div class="bars" aria-hidden="true">
+        <div style="height:38%"></div><div style="height:52%"></div><div style="height:46%"></div>
+        <div style="height:66%"></div><div style="height:58%"></div><div style="height:78%"></div>
+        <div style="height:72%"></div><div style="height:90%"></div><div style="height:96%"></div>
+      </div>
+      <table>
+        <thead><tr><th>Queue item</th><th>User</th><th>Type</th><th>Risk</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>Report #4821</td><td>user_8f2c…</td><td>Off-platform payment attempt</td><td class="risk-high">HIGH</td><td><button class="btn btn-sm btn-primary">Review</button></td></tr>
+          <tr><td>Verification #1190</td><td>user_31aa…</td><td>ID + face match</td><td class="risk-low">LOW</td><td><button class="btn btn-sm btn-primary">Review</button></td></tr>
+          <tr><td>Flagged message</td><td>user_77bd…</td><td>Contact info shared</td><td class="risk-med">MED</td><td><button class="btn btn-sm btn-primary">Review</button></td></tr>
+          <tr><td>Payout request</td><td>companion_09…</td><td>₹4,200 withdrawal</td><td class="risk-low">LOW</td><td><button class="btn btn-sm btn-secondary">Approve</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATES ================= -->
+<section id="states">
+  <div class="wrap">
+    <span class="eyebrow">09 — States</span>
+    <h2 class="sec">Loading, empty &amp; error</h2>
+    <p class="sec-sub">Every async surface gets skeletons, friendly empty states, and recoverable errors — never a raw backend message.</p>
+    <div class="states">
+      <div class="skel shimmer"><div class="img"></div><div class="ln" style="width:60%"></div><div class="ln" style="width:85%"></div><div class="ln" style="width:40%;margin-bottom:18px"></div></div>
+      <div class="state">
+        <div class="glyph" style="font-size:24px">♡</div>
+        <h4>No favorites yet</h4>
+        <p>Tap the heart on any companion to save them here.</p>
+        <button class="btn btn-primary btn-sm">Explore companions</button>
+      </div>
+      <div class="state">
+        <div class="glyph" style="font-size:24px">⚠️</div>
+        <h4>Couldn't load bookings</h4>
+        <p>Check your connection and try again. Nothing lost.</p>
+        <button class="btn btn-secondary btn-sm">Retry</button>
+      </div>
+      <div class="state">
+        <div class="glyph" style="font-size:24px">🛡️</div>
+        <h4>You're all caught up</h4>
+        <p>No safety alerts or reports on your account.</p>
+        <button class="btn btn-ghost btn-sm">Visit safety center</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Saath design system · Phase 2 deliverable · Mobile-first · WCAG 2.1 AA target · 18+ platform<br>
+    Fraunces + Plus Jakarta Sans in production (system fallbacks shown here)
+  </div>
+</footer>
+
+<script>
+  function fav(btn){
+    var svg=btn.querySelector('svg');
+    var filled=svg.getAttribute('fill')==='#E0564F';
+    svg.setAttribute('fill', filled?'none':'#E0564F');
+    btn.style.transform='scale(1.25)';
+    setTimeout(function(){btn.style.transform='scale(1)'},180);
+  }
+</script>
+</body>
+</html>

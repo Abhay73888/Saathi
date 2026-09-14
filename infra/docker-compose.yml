@@ -1,0 +1,41 @@
+# Production-like local dependencies for Saath.
+# The sandbox already runs Postgres + Redis natively; this file is for
+# other machines / CI. Run: docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: saath
+      POSTGRES_PASSWORD: saath
+      POSTGRES_DB: saath
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saath"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: ["redisdata:/data"]
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: saath
+      MINIO_ROOT_PASSWORD: saathsecret
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["miniodata:/data"]
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports: ["8025:8025"]
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

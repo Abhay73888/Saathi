@@ -1,0 +1,22 @@
+{
+  "name": "saath",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Saath — verified companionship marketplace (monorepo)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @saath/shared",
+    "db:migrate": "npm run prisma:migrate -w @saath/api",
+    "db:seed": "npm run db:seed -w @saath/api",
+    "db:setup": "npm run build:shared && npm run prisma:migrate -w @saath/api && npm run db:seed -w @saath/api",
+    "dev": "npm run dev -w @saath/api",
+    "typecheck": "npm run typecheck -w @saath/api",
+    "test": "npm run test -w @saath/shared && npm run test -w @saath/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

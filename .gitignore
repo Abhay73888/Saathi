@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.next/
+.turbo/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+coverage/
+.nyc_output/
+tmp/
+*.tsbuildinfo
+.config/
+.sudo_as_admin_successful
+
