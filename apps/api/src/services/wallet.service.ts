@@ -111,7 +111,7 @@ export async function releaseMaturedEarnings(cooldownHours: number): Promise<num
     });
     if (!creditTxn) continue; // already released or reversed
     const amount = creditTxn.amountPaise;
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.walletTransaction.update({
         where: { id: creditTxn.id },
         data: { state: WalletTxnState.AVAILABLE },
@@ -147,7 +147,7 @@ export async function requestPayout(
   fundAccountId: string,
 ): Promise<{ id: string; status: PayoutStatus }> {
   const amount = BigInt(amountPaise);
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const wallet = await getOrCreateWallet(tx, userId);
     if (wallet.availablePaise < amount) {
       throw Errors.badRequest('Available balance is lower than this amount.', 'WALLET_INSUFFICIENT');

@@ -23,13 +23,13 @@ export async function recordRiskEvent(
   });
 
   const events = await prisma.riskEvent.findMany({ where: { userId } });
-  const { score, level } = scoreSignals(events.map((e) => e.type as never));
+  const { score, level } = scoreSignals(events.map((e: { type: string }) => e.type as never));
 
   const prev = await prisma.riskScore.findUnique({ where: { userId } });
   await prisma.riskScore.upsert({
     where: { userId },
-    create: { userId, score, level, reasons: events.map((e) => e.type) },
-    update: { score, level, reasons: events.map((e) => e.type), updatedAt: new Date() },
+    create: { userId, score, level, reasons: events.map((e: { type: string }) => e.type) },
+    update: { score, level, reasons: events.map((e: { type: string }) => e.type), updatedAt: new Date() },
   });
 
   if (level === RiskLevel.HIGH && prev?.level !== RiskLevel.HIGH) {
