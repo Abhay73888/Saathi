@@ -22,15 +22,19 @@ export function createApp(): express.Express {
   const app = express();
 
   app.set('trust proxy', 1);
+  const helmetMiddleware = (helmet as any).default || (helmet as any);
+  const corsMiddleware = (cors as any).default || (cors as any);
+  const cookieParserMiddleware = (cookieParser as any).default || (cookieParser as any);
+
   app.use(
-    helmet({
+    helmetMiddleware({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       contentSecurityPolicy: config.isProd ? undefined : false,
     }),
   );
   app.use(
-    cors({
-      origin: (origin, cb) => {
+    corsMiddleware({
+      origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
         // Allow browsers from any local origin in dev; strict in production.
         const allowed = config.webOrigin;
         if (!origin || config.env !== 'production') return cb(null, true);
@@ -45,7 +49,7 @@ export function createApp(): express.Express {
     if (req.path === '/payments/webhook') return next();
     express.json({ limit: '1mb' })(req, res, next);
   });
-  app.use(cookieParser());
+  app.use(cookieParserMiddleware());
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'saath-api' }));
 
