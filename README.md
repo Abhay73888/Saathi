@@ -150,6 +150,22 @@ Now open [http://localhost:3000](http://localhost:3000) in your browser!
 
 ---
 
+## 🚀 Deployment
+
+The monorepo deploys in two halves:
+
+| Piece | Host | Notes |
+| --- | --- | --- |
+| `apps/web` (Next.js 15 PWA) | **Vercel** | Project **Root Directory must be `apps/web`**; `apps/web/vercel.json` pins the Next.js framework and `npm run build`. |
+| `apps/api` (Express + Prisma + Redis + Socket.IO) | Render / Railway / Fly / ECS | Long-lived processes — not Vercel serverless. Build `npm run build:api`, start `npm run start:api`. |
+
+Set `NEXT_PUBLIC_API_BASE` (e.g. `https://api.example.com/api/v1`) in the Vercel project
+environment variables — it is inlined at build time.
+
+👉 **Full checklist, environment variables, and the Vercel error/troubleshooting matrix: [`docs/VERCEL_DEPLOY.md`](docs/VERCEL_DEPLOY.md).**
+
+---
+
 ## 📲 How to Install as Mobile App (PWA)
 
 ### 🟢 Android (Google Chrome)
