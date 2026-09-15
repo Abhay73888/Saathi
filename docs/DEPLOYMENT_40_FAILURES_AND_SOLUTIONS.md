@@ -1,6 +1,10 @@
 # 🛡️ SAATH (साथ) — 44 Deployment Failure Modes & Exact Solutions Matrix
 ### *Enterprise Production Readiness, Vercel/Render Diagnostics & Security Hardening*
 
+> Canonical, step-by-step deployment settings (Vercel Root Directory, environment variables,
+> build/install commands) live in [`docs/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md). This document is
+> the wider failure matrix.
+
 ---
 
 ## 📑 Category Index
@@ -20,15 +24,15 @@
 - **Solution Applied**: 
   1. Whitelisted `!packages/shared/dist/` in `.gitignore` so compiled artifacts are always tracked.
   2. Added `"transpilePackages": ["@saath/shared"]` in `apps/web/next.config.mjs`.
-  3. Added `"prebuild": "npm --prefix ../.. run build:shared || true"` in `apps/web/package.json`.
+  3. Added `"prebuild": "npm --prefix ../.. run build:shared"` in `apps/web/package.json` so every `npm run build` recompiles the shared package first (no silent `|| true` fallback).
 
 ### 2. `npm warn allow-scripts ... esbuild postinstall`
-- **Root Cause**: npm v10+ warns when packages execute post-install binaries unless explicitly approved.
-- **Solution Applied**: Configured `.npmrc` with `engine-strict=false`, `fund=false`, `audit=false` to suppress non-actionable CI output.
+- **Root Cause**: npm 11+ blocks dependency install scripts until that exact package version is approved, and warns on every install for `esbuild` (pulled in transitively by `tsx` and `vitest`). The warning is informational — it never fails a build.
+- **Solution Applied**: `.npmrc` keeps `engine-strict=false`, `fund=false`, `audit=false` and adds `include=dev` (so `NODE_ENV=production` cannot strip the build toolchain). The root `package.json` approves the esbuild versions currently in the lockfile via `allowScripts`. `npm install-scripts ls` lists anything still unapproved. Do not blanket-approve `argon2` — its install script is a `node-gyp` build that needs a compiler.
 
 ### 3. Vercel Root Directory Misconfiguration
-- **Root Cause**: Setting Vercel Root Directory to root without `buildCommand` causes Vercel to guess the app, or setting it to `apps/web` without workspace linking causes missing parent `node_modules`.
-- **Solution Applied**: Created both root `vercel.json` (pointing `buildCommand` to `npm run build:shared && npm run build -w @saath/web` with `outputDirectory: "apps/web/.next"`) and `apps/web/vercel.json`.
+- **Root Cause**: The Next.js app lives in `apps/web`, but Vercel's Root Directory was the repository root, so Vercel looked for the app (and `.next`) in the wrong place. A repository-root `vercel.json` with `buildCommand` + `outputDirectory: "apps/web/.next"` does **not** fix this: overriding `outputDirectory` replaces Vercel's Next.js adapter with naive static hosting and the deployment fails looking for `routes-manifest.json`.
+- **Solution Applied**: Root Directory is set to `apps/web` in the Vercel project settings (the only place that setting can live), and `apps/web/vercel.json` pins `framework: nextjs` + `buildCommand: npm run build`. The misleading repository-root `vercel.json` was deleted. Full recipe: `docs/VERCEL_DEPLOY.md`.
 
 ### 4. Node.js Version Mismatch (`engines` check failure)
 - **Root Cause**: Cloud host defaulting to Node 18 or Node 22 while code expects Node 20+.
