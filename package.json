@@ -13,6 +13,7 @@
     "build:shared": "npm run build -w @saath/shared",
     "build:api": "npm run build:shared && npm run build -w @saath/api",
     "build:web": "npm run build:shared && npm run build -w @saath/web",
+    "start:api": "npm run start -w @saath/api",
     "db:migrate": "npm run prisma:migrate -w @saath/api",
     "db:seed": "npm run db:seed -w @saath/api",
     "db:setup": "npm run build:shared && npm run prisma:migrate -w @saath/api && npm run db:seed -w @saath/api",
