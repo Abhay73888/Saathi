@@ -35,10 +35,11 @@ export function createApp(): express.Express {
   app.use(
     corsMiddleware({
       origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
-        // Allow browsers from any local origin in dev; strict in production.
+        // Allow browsers from any local origin in dev, or if wildcard is set
+        if (!origin || config.env !== 'production' || config.webOrigin === '*') return cb(null, true);
         const allowed = config.webOrigin;
-        if (!origin || config.env !== 'production') return cb(null, true);
-        return cb(null, origin === allowed);
+        const isVercel = origin.endsWith('.vercel.app');
+        return cb(null, origin === allowed || isVercel);
       },
       credentials: true,
     }),
