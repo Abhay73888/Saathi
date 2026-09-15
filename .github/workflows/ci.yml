@@ -1,0 +1,36 @@
+name: CI & Build Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Monorepo Build & Lint Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Shared Package
+        run: npm run build:shared
+
+      - name: Run Shared Unit Tests
+        run: npm run test -w @saath/shared
+
+      - name: Build Next.js Web App
+        run: npm run build -w @saath/web
+        env:
+          NEXT_PUBLIC_API_BASE: https://api.saath.app/api/v1
